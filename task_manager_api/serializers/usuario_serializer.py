@@ -26,3 +26,9 @@ class UsuarioPatchRequest(BaseModel):
     username: Optional[str] = None
     nome: Optional[str] = None
     email: Optional[str] = None
+
+class UsuarioSenhaPatchRequest(BaseModel):
+    """Representa o modelo de atualização da senha do usuário"""
+    
+    senha: str
+    confirmar_senha: str

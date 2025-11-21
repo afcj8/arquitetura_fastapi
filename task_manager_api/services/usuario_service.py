@@ -1,4 +1,4 @@
-from task_manager_api.serializers.usuario_serializer import UsuarioPatchRequest
+from task_manager_api.serializers.usuario_serializer import UsuarioPatchRequest, UsuarioSenhaPatchRequest
 from task_manager_api.repositories.usuario_repository import UsuarioRepository
 from task_manager_api.models.usuario import Usuario
 from task_manager_api.security import criar_hash_senha
@@ -6,14 +6,24 @@ from fastapi.exceptions import HTTPException
 from fastapi import status
 
 class UsuarioService:
-    def __init__(self, usuario_repository: UsuarioRepository):
+    def __init__(
+        self, 
+        usuario_repository: UsuarioRepository
+    ):
         self.usuario_repository = usuario_repository
 
-    def validar_username_senha(self, usuario: Usuario) -> None:
+    def validar_username_senha(
+        self, 
+        usuario: Usuario
+    ) -> None:
         if not usuario.username or not usuario.senha:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username e senha são obrigatórios")
         
-    def checar_usuario_existente(self, username: str, email: str) -> None:
+    def checar_usuario_existente(
+        self, 
+        username: str, 
+        email: str
+    ) -> None:
         usuario_por_username = self.usuario_repository.get_usuario_por_username(username)
         if usuario_por_username:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username já cadastrado")
@@ -22,7 +32,11 @@ class UsuarioService:
         if usuario_por_email:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email já cadastrado")
         
-    def checar_usuario_existente_excluindo_id(self, username: str, email: str, usuario_id: int) -> None:
+    def checar_usuario_existente_excluindo_id(
+        self, 
+        username: str, 
+        email: str, usuario_id: int
+    ) -> None:
         usuario_por_username = self.usuario_repository.get_usuario_por_username_excluindo_id(username, usuario_id)
         if usuario_por_username:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username já cadastrado")
@@ -31,7 +45,10 @@ class UsuarioService:
         if usuario_por_email:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email já cadastrado")
         
-    def add_usuario(self, usuario: Usuario) -> Usuario:
+    def add_usuario(
+        self, 
+        usuario: Usuario
+    ) -> Usuario:
         self.validar_username_senha(usuario)
         self.checar_usuario_existente(usuario.username, usuario.email)
         usuario.senha = criar_hash_senha(usuario.senha)
@@ -71,3 +88,19 @@ class UsuarioService:
             usuario_existente.nome = dados.nome
 
         return self.usuario_repository.add_update_usuario(usuario_existente)
+    
+    def update_senha_usuario(
+        self,
+        usuario: Usuario,
+        dados: UsuarioSenhaPatchRequest,
+    ) -> Usuario:
+        
+        if dados.senha != dados.confirmar_senha:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Senha e confirmar senha não coincidem."
+            )
+
+        usuario.senha = criar_hash_senha(dados.senha)
+        
+        return self.usuario_repository.add_update_usuario(usuario)
