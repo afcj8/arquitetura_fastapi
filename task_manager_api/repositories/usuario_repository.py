@@ -30,6 +30,14 @@ class UsuarioRepository:
     def get_usuario_por_id(self, usuario_id: int) -> Usuario | None:
         usuario = self.db_session.get(Usuario, usuario_id)
         return usuario
+    
+    def get_admin(self, username: str) -> Usuario | None:
+        usuario = self.db_session.exec(
+            select(Usuario).where(
+                Usuario.is_admin == True,
+                Usuario.username == username    
+            )).first()
+        return usuario
 
     def add_update_usuario(self, usuario: Usuario) -> Usuario:
         self.db_session.add(usuario)
