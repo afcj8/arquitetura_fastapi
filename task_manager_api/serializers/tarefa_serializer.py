@@ -9,7 +9,6 @@ class TarefaRequest(BaseModel):
     descricao: Optional[str] = None
     status: str
     prioridade: str
-    usuario_id: int
     data_criacao: Optional[datetime] = datetime.now()
 
 class TarefaResponse(BaseModel):
