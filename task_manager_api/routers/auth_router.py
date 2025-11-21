@@ -8,7 +8,7 @@ from task_manager_api.services.usuario_service import UsuarioService
 from task_manager_api.services.auth_service import AuthService
 from task_manager_api.serializers.token_serializer import TokenResponse, RefreshToken
 from task_manager_api.services.token_service import criar_access_token, criar_refresh_token
-from task_manager_api.config import ACCESS_TOKEN_EXPIRE_MINUTES
+from task_manager_api.config import ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_MINUTES
 
 router = APIRouter()
 
@@ -30,7 +30,8 @@ def token(
     payload = {"sub": usuario.username}
 
     access_token = criar_access_token(payload)
-    refresh_token = criar_refresh_token(payload)
+    refresh_token_expires = timedelta(minutes=REFRESH_TOKEN_EXPIRE_MINUTES)
+    refresh_token = criar_refresh_token(payload, expires_delta=refresh_token_expires)
 
     return TokenResponse(
         access_token=access_token, 
