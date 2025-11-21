@@ -1,3 +1,4 @@
+from task_manager_api.serializers.usuario_serializer import UsuarioPatchRequest
 from task_manager_api.repositories.usuario_repository import UsuarioRepository
 from task_manager_api.models.usuario import Usuario
 from task_manager_api.security import criar_hash_senha
@@ -21,9 +22,52 @@ class UsuarioService:
         if usuario_por_email:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email já cadastrado")
         
+    def checar_usuario_existente_excluindo_id(self, username: str, email: str, usuario_id: int) -> None:
+        usuario_por_username = self.usuario_repository.get_usuario_por_username_excluindo_id(username, usuario_id)
+        if usuario_por_username:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username já cadastrado")
+        
+        usuario_por_email = self.usuario_repository.get_usuario_por_email_excluindo_id(email, usuario_id)
+        if usuario_por_email:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email já cadastrado")
+        
     def add_usuario(self, usuario: Usuario) -> Usuario:
         self.validar_username_senha(usuario)
         self.checar_usuario_existente(usuario.username, usuario.email)
         usuario.senha = criar_hash_senha(usuario.senha)
-        novo_usuario = self.usuario_repository.add_usuario(usuario)
+        novo_usuario = self.usuario_repository.add_update_usuario(usuario)
         return novo_usuario
+    
+    def update_usuario(
+        self,
+        usuario_id: int,
+        dados: UsuarioPatchRequest,
+        usuario_logado: Usuario
+    ) -> Usuario:
+
+        usuario_existente = self.usuario_repository.get_usuario_por_id(usuario_id)
+
+        if not usuario_existente:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Usuário não encontrado"
+            )
+
+        if usuario_existente.id != usuario_logado.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Você não tem permissão para atualizar este usuário."
+            )
+        
+        if dados.username is not None:
+            self.checar_usuario_existente_excluindo_id(dados.username, usuario_existente.email, usuario_id)
+            usuario_existente.username = dados.username
+
+        if dados.email is not None:
+            self.checar_usuario_existente_excluindo_id(usuario_existente.username, dados.email, usuario_id)
+            usuario_existente.email = dados.email
+
+        if dados.nome is not None:
+            usuario_existente.nome = dados.nome
+
+        return self.usuario_repository.add_update_usuario(usuario_existente)

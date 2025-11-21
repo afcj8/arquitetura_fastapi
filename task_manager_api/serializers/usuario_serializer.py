@@ -19,3 +19,10 @@ class UsuarioResponse(BaseModel):
     nome: str
     email: str
     data_criacao: datetime
+
+class UsuarioPatchRequest(BaseModel):
+    """Representa o modelo de atualização parcial do usuário"""
+    
+    username: Optional[str] = None
+    nome: Optional[str] = None
+    email: Optional[str] = None

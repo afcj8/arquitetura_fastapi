@@ -24,12 +24,6 @@ class AuthService:
             raise CREDENCIAIS_INVALIDAS
 
         return usuario
-    
-    def decodificar_token(self, token: str):
-        try:
-            return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        except JWTError:
-            raise CREDENCIAIS_INVALIDAS
         
     def validar_token(self, token: str):
         try:
