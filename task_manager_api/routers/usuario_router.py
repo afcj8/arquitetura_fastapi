@@ -6,7 +6,7 @@ from task_manager_api.models.usuario import Usuario
 from task_manager_api.dependencies import get_usuario_autenticado
 from task_manager_api.repositories.usuario_repository import UsuarioRepository
 from task_manager_api.services.usuario_service import UsuarioService
-from task_manager_api.serializers.usuario_serializer import UsuarioRequest
+from task_manager_api.serializers.usuario_serializer import UsuarioRequest, UsuarioResponse
 
 router = APIRouter()
 
@@ -21,7 +21,10 @@ def criar_usuario(
     novo_usuario = service.add_usuario(usuario)
     return {"detail": "Usuário criado com sucesso.", "usuario_id": novo_usuario.id}
 
-@router.get("/me")
+@router.get(
+    "/me",
+    response_model=UsuarioResponse
+)
 def obter_usuario_atual(
     usuario: Usuario = Depends(get_usuario_autenticado)
 ):
