@@ -14,9 +14,6 @@ class UsuarioService:
         if usuario_por_username:
             raise ValueError("Username já existe.")
         
-        if not usuario_por_username:
-            raise ValueError("Usuário não encontrado.")
-        
         usuario_por_email = self.usuario_repository.get_usuario_por_email(email)
         if usuario_por_email:
             raise ValueError("Email já existe.")
