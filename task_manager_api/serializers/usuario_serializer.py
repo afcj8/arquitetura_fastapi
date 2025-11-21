@@ -10,3 +10,12 @@ class UsuarioRequest(BaseModel):
     senha: str
     email: str
     data_criacao: Optional[datetime] = datetime.now()
+
+class UsuarioResponse(BaseModel):
+    """Representa o modelo de resposta do usuário"""
+    
+    id: int
+    username: str
+    nome: str
+    email: str
+    data_criacao: datetime
