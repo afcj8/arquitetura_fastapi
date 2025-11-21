@@ -47,7 +47,6 @@ class AuthService:
     def get_usuario_se_alterar_senha_for_permitido(
         self,
         username: str,
-        usuario_logado: Usuario,
         pwd_reset_token: Optional[str] = None,
     ) -> Usuario:
 
@@ -55,17 +54,30 @@ class AuthService:
         if not usuario_alvo:
             raise HTTPException(404, "Usuário alvo não encontrado")
 
-        # Se foi enviado token de reset
-        usuario_token = None
         if pwd_reset_token:
-            usuario_token = self.validar_token(pwd_reset_token)
+            try:
+                payload = jwt.decode(pwd_reset_token, SECRET_KEY, algorithms=[ALGORITHM])
 
-        validar_reset = usuario_token and usuario_token.id == usuario_alvo.id
-        validar_logado = usuario_logado.id == usuario_alvo.id
+                if payload.get("sub") != usuario_alvo.username:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Token inválido para o usuário alvo."
+                    )
+                
+                if payload.get("scope") != "pwd_reset":
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Token inválido para redefinição de senha."
+                    )
+                
+                return usuario_alvo
+            except JWTError:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Token inválido ou expirado."
+                )
 
-        if not validar_reset and not validar_logado:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Permissão negada para alterar a senha deste usuário."
-            )
-        return usuario_alvo
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Alteração de senha não permitida."
+        )
