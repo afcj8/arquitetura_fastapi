@@ -5,12 +5,16 @@ from task_manager_api.repositories.usuario_repository import UsuarioRepository
 from task_manager_api.services.usuario_service import UsuarioService
 from task_manager_api.services.auth_service import AuthService
 from task_manager_api.serializers.auth_serializer import AuthRequest
+from task_manager_api.serializers.token_serializer import TokenResponse
 from task_manager_api.services.token_service import criar_access_token, criar_refresh_token
 
 router = APIRouter()
 
 @router.post("/login")
-def login(form: AuthRequest, session: Session = Depends(get_session)):
+def login(
+    form: AuthRequest, 
+    session: Session = Depends(get_session)
+) -> TokenResponse:
 
     repo = UsuarioRepository(session)
     usuario_service = UsuarioService(repo)
@@ -23,8 +27,8 @@ def login(form: AuthRequest, session: Session = Depends(get_session)):
     access_token = criar_access_token(payload)
     refresh_token = criar_refresh_token(payload)
 
-    return {
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-        "token_type": "bearer"
-    }
+    return TokenResponse(
+        access_token=access_token, 
+        refresh_token=refresh_token, 
+        token_type="bearer"
+    )
