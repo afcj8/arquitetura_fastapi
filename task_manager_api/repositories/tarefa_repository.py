@@ -20,3 +20,7 @@ class TarefaRepository:
         self.db_session.commit()
         self.db_session.refresh(tarefa)
         return tarefa
+    
+    def delete_tarefa(self, tarefa: Tarefa) -> None:
+        self.db_session.delete(tarefa)
+        self.db_session.commit()
