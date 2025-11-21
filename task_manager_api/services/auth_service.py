@@ -44,6 +44,24 @@ class AuthService:
         except JWTError:
             raise CREDENCIAIS_INVALIDAS
         
+    def refresh_token(self, token: str) -> str:
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            username = payload.get("sub")
+            scope = payload.get("scope")
+
+            if not username or scope != "refresh_token":
+                raise CREDENCIAIS_INVALIDAS
+
+            usuario = self.usuario_service.usuario_repository.get_usuario_por_username(username)
+            if not usuario:
+                raise CREDENCIAIS_INVALIDAS
+
+            return usuario
+
+        except JWTError:
+            raise CREDENCIAIS_INVALIDAS
+        
     def get_usuario_se_alterar_senha_for_permitido(
         self,
         username: str,
