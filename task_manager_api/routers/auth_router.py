@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends
 from task_manager_api.database import get_session
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session
 from task_manager_api.repositories.usuario_repository import UsuarioRepository
 from task_manager_api.services.usuario_service import UsuarioService
 from task_manager_api.services.auth_service import AuthService
-from task_manager_api.serializers.auth_serializer import AuthRequest
 from task_manager_api.serializers.token_serializer import TokenResponse
 from task_manager_api.services.token_service import criar_access_token, criar_refresh_token
 
@@ -12,7 +12,7 @@ router = APIRouter()
 
 @router.post("/login")
 def login(
-    form: AuthRequest, 
+    form: OAuth2PasswordRequestForm = Depends(),
     session: Session = Depends(get_session)
 ) -> TokenResponse:
 
@@ -20,7 +20,7 @@ def login(
     usuario_service = UsuarioService(repo)
     auth_service = AuthService(usuario_service)
 
-    usuario = auth_service.autenticar_usuario(form.username, form.senha)
+    usuario = auth_service.autenticar_usuario(form.username, form.password)
 
     payload = {"sub": usuario.username}
 

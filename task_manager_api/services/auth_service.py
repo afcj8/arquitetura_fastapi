@@ -39,7 +39,7 @@ class AuthService:
             if not username:
                 raise CREDENCIAIS_INVALIDAS
 
-            usuario = self.usuario_service.get_usuario_por_username(username)
+            usuario = self.usuario_service.usuario_repository.get_usuario_por_username(username)
             if not usuario:
                 raise CREDENCIAIS_INVALIDAS
 
