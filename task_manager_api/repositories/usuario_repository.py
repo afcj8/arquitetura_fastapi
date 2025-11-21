@@ -19,13 +19,7 @@ class UsuarioRepository:
         usuario = self.db_session.get(Usuario, usuario_id)
         return usuario
 
-    def add_usuario(self, usuario: Usuario) -> Usuario:
-        self.db_session.add(usuario)
-        self.db_session.commit()
-        self.db_session.refresh(usuario)
-        return usuario
-    
-    def update_usuario(self, usuario: Usuario) -> Usuario:
+    def add_update_usuario(self, usuario: Usuario) -> Usuario:
         self.db_session.add(usuario)
         self.db_session.commit()
         self.db_session.refresh(usuario)

@@ -21,11 +21,11 @@ class UsuarioService:
         if usuario_por_email:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email já cadastrado")
         
-    def add_usuario(self, usuario: Usuario) -> Usuario:
+    def add_update_usuario(self, usuario: Usuario) -> Usuario:
         self.validar_username_senha(usuario)
         self.checar_usuario_existente(usuario.username, usuario.email)
         usuario.senha = criar_hash_senha(usuario.senha)
-        novo_usuario = self.usuario_repository.add_usuario(usuario)
+        novo_usuario = self.usuario_repository.add_update_usuario(usuario)
         return novo_usuario
     
     def update_usuario(self, usuario_id: int, usuario_atualizado: Usuario, usuario_logado: Usuario) -> Usuario:
