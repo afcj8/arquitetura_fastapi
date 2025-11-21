@@ -59,3 +59,17 @@ def obter_tarefa(
     service = TarefaService(repo)
     tarefa = service.get_tarefa_por_id(id, usuario.id)
     return tarefa
+
+@router.delete(
+    "/{id}",
+    status_code=200
+)
+def deletar_tarefa(
+    id: int,
+    usuario: int = Depends(get_usuario_autenticado),
+    session: Session = Depends(get_session)
+):
+    repo = TarefaRepository(session)
+    service = TarefaService(repo)
+    service.delete_tarefa(id, usuario.id)
+    return {"detail": "Tarefa deletada com sucesso."}
