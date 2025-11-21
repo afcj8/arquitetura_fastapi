@@ -55,6 +55,22 @@ class UsuarioService:
                 detail="Ação permitida apenas para administradores."
             )
         
+    def get_usuarios(
+        self,
+        usuario: Usuario
+    ) -> list[Usuario]:
+        self.checar_usuario_is_admin(usuario)
+        usuarios = self.usuario_repository.get_usuarios()
+        return usuarios
+    
+    def get_admins(
+        self,
+        usuario: Usuario
+    ) -> list[Usuario]:
+        self.checar_usuario_is_admin(usuario)
+        admins = self.usuario_repository.get_admins()
+        return admins
+        
     def add_usuario(
         self, 
         usuario: Usuario
@@ -76,14 +92,6 @@ class UsuarioService:
         usuario.is_admin = True
         novo_usuario =  self.usuario_repository.add_update_usuario(usuario)
         return novo_usuario
-    
-    def get_usuarios(
-        self,
-        usuario: Usuario
-    ) -> list[Usuario]:
-        self.checar_usuario_is_admin(usuario)
-        usuarios = self.usuario_repository.get_usuarios()
-        return usuarios
     
     def update_usuario(
         self,

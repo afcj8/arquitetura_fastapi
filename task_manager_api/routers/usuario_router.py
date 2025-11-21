@@ -48,6 +48,17 @@ def obter_usuario_atual(
 ):
     return usuario
 
+@router.get(
+    "/admins",
+    response_model=list[UsuarioResponse]
+)
+def listar_usuarios_admins(
+    service: UsuarioService = Depends(get_usuario_service),
+    usuario_logado: Usuario = Depends(get_usuario_autenticado)
+):    
+    admins = service.get_admins(usuario_logado)
+    return admins
+
 @router.post(
     "/admin",
     response_model=UsuarioResponse
