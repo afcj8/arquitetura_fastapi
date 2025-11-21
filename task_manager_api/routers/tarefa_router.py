@@ -1,10 +1,6 @@
-from sqlmodel import Session
 from fastapi import APIRouter, Depends
-from task_manager_api.database import get_session
-from fastapi import APIRouter
 from task_manager_api.models.tarefa import Tarefa
 from task_manager_api.dependencies import get_usuario_autenticado, get_tarefa_service
-from task_manager_api.repositories.tarefa_repository import TarefaRepository
 from task_manager_api.services.tarefa_service import TarefaService
 from task_manager_api.serializers.tarefa_serializer import (
     TarefaRequest, 
