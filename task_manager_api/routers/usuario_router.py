@@ -6,7 +6,7 @@ from task_manager_api.models.usuario import Usuario
 from task_manager_api.dependencies import get_usuario_autenticado
 from task_manager_api.repositories.usuario_repository import UsuarioRepository
 from task_manager_api.services.usuario_service import UsuarioService
-from task_manager_api.serializers.usuario_serializer import UsuarioRequest, UsuarioResponse
+from task_manager_api.serializers.usuario_serializer import UsuarioRequest, UsuarioResponse, UsuarioPatchRequest
 
 router = APIRouter()
 
@@ -29,3 +29,15 @@ def obter_usuario_atual(
     usuario: Usuario = Depends(get_usuario_autenticado)
 ):
     return usuario
+
+@router.patch("/{id}")
+def atualizar_usuario(
+    id: int,
+    usuario_data: UsuarioPatchRequest,
+    session: Session = Depends(get_session),
+    usuario_logado: Usuario = Depends(get_usuario_autenticado)
+):
+    repo = UsuarioRepository(session)
+    service = UsuarioService(repo)
+    usuario = service.update_usuario(id, usuario_data, usuario_logado)
+    return {"detail": "Usuário atualizado com sucesso.", "usuario_id": usuario.id}

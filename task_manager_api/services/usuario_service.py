@@ -52,6 +52,7 @@ class UsuarioService:
             self.checar_usuario_existente(usuario_existente.username, usuario_atualizado.email)
             usuario_existente.email = usuario_atualizado.email
         
+        usuario_existente.nome = usuario_atualizado.nome or usuario_existente.nome
         self.usuario_repository.db_session.add(usuario_existente)
         self.usuario_repository.db_session.commit()
         self.usuario_repository.db_session.refresh(usuario_existente)
