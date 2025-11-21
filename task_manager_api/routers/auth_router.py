@@ -1,3 +1,4 @@
+from datetime import timedelta
 from fastapi import APIRouter, Depends
 from task_manager_api.database import get_session
 from fastapi.security import OAuth2PasswordRequestForm
@@ -5,16 +6,20 @@ from sqlmodel import Session
 from task_manager_api.repositories.usuario_repository import UsuarioRepository
 from task_manager_api.services.usuario_service import UsuarioService
 from task_manager_api.services.auth_service import AuthService
-from task_manager_api.serializers.token_serializer import TokenResponse
+from task_manager_api.serializers.token_serializer import TokenResponse, RefreshToken
 from task_manager_api.services.token_service import criar_access_token, criar_refresh_token
+from task_manager_api.config import ACCESS_TOKEN_EXPIRE_MINUTES
 
 router = APIRouter()
 
-@router.post("/token")
+@router.post(
+    "/token",
+    response_model=TokenResponse
+)
 def token(
     form: OAuth2PasswordRequestForm = Depends(),
     session: Session = Depends(get_session)
-) -> TokenResponse:
+):
 
     repo = UsuarioRepository(session)
     usuario_service = UsuarioService(repo)
@@ -27,6 +32,36 @@ def token(
     access_token = criar_access_token(payload)
     refresh_token = criar_refresh_token(payload)
 
+    return TokenResponse(
+        access_token=access_token, 
+        refresh_token=refresh_token, 
+        token_type="bearer"
+    )
+
+@router.post(
+    "/refresh-token",
+    response_model=TokenResponse
+)
+def refresh_token(
+    refresh_token_data: RefreshToken,
+    session: Session = Depends(get_session)
+):
+    repo = UsuarioRepository(session)
+    usuario_service = UsuarioService(repo)
+    auth_service = AuthService(usuario_service)
+
+    usuario = auth_service.refresh_token(refresh_token_data.refresh_token)
+
+    access_token = criar_access_token(
+        data={"sub": usuario.username},
+        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
+        scope="refresh_token"
+    )
+
+    refresh_token = criar_refresh_token(
+        data={"sub": usuario.username}
+    )
+    
     return TokenResponse(
         access_token=access_token, 
         refresh_token=refresh_token, 
