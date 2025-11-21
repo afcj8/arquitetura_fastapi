@@ -1,11 +1,14 @@
+from typing import Optional
+from sqlmodel import Session
 from fastapi import APIRouter, Depends
 from task_manager_api.database import get_session
-from sqlmodel import Session
-
+from fastapi import APIRouter, BackgroundTasks, Body
 from task_manager_api.models.usuario import Usuario
-from task_manager_api.dependencies import get_usuario_autenticado, pode_alterar_senha
+from task_manager_api.dependencies import get_usuario_autenticado, get_auth_service
 from task_manager_api.repositories.usuario_repository import UsuarioRepository
 from task_manager_api.services.usuario_service import UsuarioService
+from task_manager_api.services.auth_service import AuthService
+from task_manager_api.services.reset_senha_service import ResetSenhaService
 from task_manager_api.serializers.usuario_serializer import (
     UsuarioRequest, 
     UsuarioResponse, 
@@ -48,13 +51,34 @@ def atualizar_usuario(
     
     return {"detail": "Usuário atualizado com sucesso.", "usuario_id": usuario.id}
 
+@router.post("/reset-senha")
+def solicitar_reset_senha(
+    email: str = Body(embed=True),
+    background_tasks: BackgroundTasks = None,
+):
+    """
+    Envia um email para reset de senha.
+    Não revela se o email existe ou não.
+    """
+    service = ResetSenhaService()
+
+    background_tasks.add_task(service.enviar_reset, email)
+
+    return {"detail": "Se o email existir, o link será enviado."}
+
 @router.patch("/{username}/senha")
 def alterar_senha_usuario(
     username: str,
     senha_data: UsuarioSenhaPatchRequest,
-    usuario: Usuario = Depends(pode_alterar_senha),
+    pwd_reset_token: Optional[str] = None,
     session: Session = Depends(get_session),
+    auth_service: AuthService = Depends(get_auth_service)
 ):
+    usuario = auth_service.get_usuario_se_alterar_senha_for_permitido(
+        username=username,
+        pwd_reset_token=pwd_reset_token,
+    )
+
     repo = UsuarioRepository(session)
     service = UsuarioService(repo)
 
@@ -63,4 +87,4 @@ def alterar_senha_usuario(
         senha_data
     )
 
-    return {"detail": "Senha alterada com sucesso.", "usuario_id": usuario_atualizado.id}
+    return {"detail": "Senha alterada com sucesso.", "id": usuario_atualizado.id}
