@@ -1,15 +1,11 @@
 from datetime import timedelta
 from fastapi import APIRouter, Depends
-from task_manager_api.database import get_session
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlmodel import Session
-from task_manager_api.repositories.usuario_repository import UsuarioRepository
-from task_manager_api.services.usuario_service import UsuarioService
+from task_manager_api.dependencies import get_auth_service
 from task_manager_api.services.auth_service import AuthService
 from task_manager_api.serializers.token_serializer import TokenResponse, RefreshToken
 from task_manager_api.services.token_service import criar_access_token, criar_refresh_token
 from task_manager_api.config import ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_MINUTES
-from task_manager_api.dependencies import get_auth_service
 
 router = APIRouter()
 
