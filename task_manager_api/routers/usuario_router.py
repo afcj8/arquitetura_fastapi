@@ -18,7 +18,7 @@ def criar_usuario(
     repo = UsuarioRepository(session)
     service = UsuarioService(repo)
     usuario = Usuario.model_validate(usuario_data)
-    novo_usuario = service.add_update_usuario(usuario)
+    novo_usuario = service.add_usuario(usuario)
     return {"detail": "Usuário criado com sucesso.", "usuario_id": novo_usuario.id}
 
 @router.get(
@@ -40,4 +40,5 @@ def atualizar_usuario(
     repo = UsuarioRepository(session)
     service = UsuarioService(repo)
     usuario = service.update_usuario(id, usuario_data, usuario_logado)
+    
     return {"detail": "Usuário atualizado com sucesso.", "usuario_id": usuario.id}

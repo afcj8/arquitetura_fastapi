@@ -10,9 +10,21 @@ class UsuarioRepository:
     def get_usuario_por_username(self, username: str) -> Usuario | None:
         usuario = self.db_session.exec(select(Usuario).where(Usuario.username == username)).first()
         return usuario
+    
+    def get_usuario_por_username_excluindo_id(self, username: str, usuario_id: int) -> Usuario | None:
+        usuario = self.db_session.exec(
+            select(Usuario).where(Usuario.username == username, Usuario.id != usuario_id)
+        ).first()
+        return usuario
 
     def get_usuario_por_email(self, email: str) -> Usuario | None:
         usuario = self.db_session.exec(select(Usuario).where(Usuario.email == email)).first()
+        return usuario
+    
+    def get_usuario_por_email_excluindo_id(self, email: str, usuario_id: int) -> Usuario | None:
+        usuario = self.db_session.exec(
+            select(Usuario).where(Usuario.email == email, Usuario.id != usuario_id)
+        ).first()
         return usuario
 
     def get_usuario_por_id(self, usuario_id: int) -> Usuario | None:
