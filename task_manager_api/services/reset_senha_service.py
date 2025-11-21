@@ -33,7 +33,7 @@ def _enviar_email_debug(email: str, subject: str, msg: str):
         )
 
 
-class PasswordResetService:
+class ResetSenhaService:
     def enviar_reset(self, email: str):
         """Busca o usuário e envia email com token"""
 
@@ -52,7 +52,7 @@ class PasswordResetService:
 
             msg = MSG_RESET_SENHA.format(
                 sender=smtp_sender,
-                to=usuario.nome_pessoa,
+                to=usuario.nome,
                 url=PWD_RESET_URL,
                 pwd_reset_token=token,
                 mens_expire=RESET_TOKEN_EXPIRE_MINUTES,
