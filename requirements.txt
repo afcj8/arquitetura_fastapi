@@ -1,6 +1,7 @@
 annotated-types==0.7.0
 anyio==4.9.0
-bcrypt==4.3.0
+bcrypt==3.2.2
+cffi==2.0.0
 click==8.2.1
 colorama==0.4.6
 ecdsa==0.19.1
@@ -11,6 +12,7 @@ idna==3.10
 jose==1.0.0
 passlib==1.7.4
 pyasn1==0.6.1
+pycparser==2.23
 pydantic==2.11.4
 pydantic_core==2.33.2
 python-dateutil==2.9.0.post0
