@@ -3,10 +3,15 @@ from task_manager_api.database import get_session
 from sqlmodel import Session
 
 from task_manager_api.models.usuario import Usuario
-from task_manager_api.dependencies import get_usuario_autenticado
+from task_manager_api.dependencies import get_usuario_autenticado, pode_alterar_senha
 from task_manager_api.repositories.usuario_repository import UsuarioRepository
 from task_manager_api.services.usuario_service import UsuarioService
-from task_manager_api.serializers.usuario_serializer import UsuarioRequest, UsuarioResponse, UsuarioPatchRequest
+from task_manager_api.serializers.usuario_serializer import (
+    UsuarioRequest, 
+    UsuarioResponse, 
+    UsuarioPatchRequest, 
+    UsuarioSenhaPatchRequest
+)
 
 router = APIRouter()
 
@@ -42,3 +47,20 @@ def atualizar_usuario(
     usuario = service.update_usuario(id, usuario_data, usuario_logado)
     
     return {"detail": "Usuário atualizado com sucesso.", "usuario_id": usuario.id}
+
+@router.patch("/{username}/senha")
+def alterar_senha_usuario(
+    username: str,
+    senha_data: UsuarioSenhaPatchRequest,
+    usuario: Usuario = Depends(pode_alterar_senha),
+    session: Session = Depends(get_session),
+):
+    repo = UsuarioRepository(session)
+    service = UsuarioService(repo)
+
+    usuario_atualizado = service.update_senha_usuario(
+        usuario,
+        senha_data
+    )
+
+    return {"detail": "Senha alterada com sucesso.", "usuario_id": usuario_atualizado.id}

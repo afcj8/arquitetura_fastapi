@@ -1,4 +1,4 @@
-from task_manager_api.serializers.usuario_serializer import UsuarioPatchRequest
+from task_manager_api.serializers.usuario_serializer import UsuarioPatchRequest, UsuarioSenhaPatchRequest
 from task_manager_api.repositories.usuario_repository import UsuarioRepository
 from task_manager_api.models.usuario import Usuario
 from task_manager_api.security import criar_hash_senha
@@ -88,3 +88,19 @@ class UsuarioService:
             usuario_existente.nome = dados.nome
 
         return self.usuario_repository.add_update_usuario(usuario_existente)
+    
+    def update_senha_usuario(
+        self,
+        usuario: Usuario,
+        dados: UsuarioSenhaPatchRequest,
+    ) -> Usuario:
+        
+        if dados.senha != dados.confirmar_senha:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Senha e confirmar senha não coincidem."
+            )
+
+        usuario.senha = criar_hash_senha(dados.senha)
+        
+        return self.usuario_repository.add_update_usuario(usuario)
