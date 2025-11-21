@@ -39,6 +39,12 @@ class UsuarioRepository:
             )).first()
         return usuario
     
+    def get_admins(self) -> list[Usuario]:
+        admins = self.db_session.exec(
+            select(Usuario).where(Usuario.is_admin == True)
+        ).all()
+        return admins
+    
     def get_usuarios(self) -> list[Usuario]:
         usuarios = self.db_session.exec(select(Usuario)).all()
         return usuarios
