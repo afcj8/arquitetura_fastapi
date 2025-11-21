@@ -13,4 +13,5 @@ class Usuario(SQLModel, table=True):
     nome: str = Field(nullable=False)
     senha: HashedPassword
     email: str = Field(unique=True, nullable=False)
+    is_admin: bool = Field(default=False)
     data_criacao: datetime = Field(default=datetime.now())
