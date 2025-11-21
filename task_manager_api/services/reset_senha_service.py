@@ -46,8 +46,9 @@ class ResetSenhaService:
                 return  # Não revela que o email não existe
 
             token = criar_access_token(
-                data={"sub": usuario.username, "scope": "pwd_reset"},
+                data={"sub": usuario.username},
                 expires_delta=timedelta(minutes=RESET_TOKEN_EXPIRE_MINUTES),
+                scope="pwd_reset"
             )
 
             msg = MSG_RESET_SENHA.format(

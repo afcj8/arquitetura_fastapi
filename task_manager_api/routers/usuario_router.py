@@ -83,9 +83,8 @@ def alterar_senha_usuario(
     service = UsuarioService(repo)
 
     usuario_atualizado = service.update_senha_usuario(
-        usuario.id,
-        senha_data,
-        usuario
+        usuario,
+        senha_data
     )
 
     return {"detail": "Senha alterada com sucesso.", "id": usuario_atualizado.id}
