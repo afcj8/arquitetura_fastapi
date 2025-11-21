@@ -5,7 +5,7 @@ from task_manager_api.repositories.usuario_repository import UsuarioRepository
 from task_manager_api.services.usuario_service import UsuarioService
 from task_manager_api.services.auth_service import AuthService
 from task_manager_api.serializers.auth_serializer import AuthRequest
-from task_manager_api.services.token_service import criar_access_token
+from task_manager_api.services.token_service import criar_access_token, criar_refresh_token
 
 router = APIRouter()
 
@@ -17,6 +17,14 @@ def login(form: AuthRequest, session: Session = Depends(get_session)):
     auth_service = AuthService(usuario_service)
 
     usuario = auth_service.autenticar_usuario(form.username, form.senha)
-    token = criar_access_token(usuario)  # sua função de criar token
 
-    return {"access_token": token, "token_type": "bearer"}
+    payload = {"sub": usuario.username}
+
+    access_token = criar_access_token(payload)
+    refresh_token = criar_refresh_token(payload)
+
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer"
+    }

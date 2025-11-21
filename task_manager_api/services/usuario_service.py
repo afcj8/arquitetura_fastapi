@@ -1,5 +1,6 @@
 from task_manager_api.repositories.usuario_repository import UsuarioRepository
 from task_manager_api.models.usuario import Usuario
+from task_manager_api.security import criar_hash_senha
 from fastapi.exceptions import HTTPException
 from fastapi import status
 
@@ -23,5 +24,6 @@ class UsuarioService:
     def add_usuario(self, usuario: Usuario) -> Usuario:
         self.validar_username_senha(usuario)
         self.checar_usuario_existente(usuario.username, usuario.email)
+        usuario.senha = criar_hash_senha(usuario.senha)
         novo_usuario = self.usuario_repository.add_usuario(usuario)
         return novo_usuario

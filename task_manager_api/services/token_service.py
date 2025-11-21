@@ -11,7 +11,6 @@ def criar_access_token(
     scope: str = "access_token"
 ) -> str:
     """Cria um token de acesso"""
-    
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(tz=tz.tzutc()) + expires_delta

@@ -11,7 +11,6 @@ CREDENCIAIS_INVALIDAS = HTTPException(
     headers={"WWW-Authenticate": "Bearer"},
 )
 
-
 class AuthService:
     def __init__(self, usuario_service: UsuarioService):
         self.usuario_service = usuario_service
