@@ -38,6 +38,10 @@ class UsuarioRepository:
                 Usuario.username == username    
             )).first()
         return usuario
+    
+    def get_usuarios(self) -> list[Usuario]:
+        usuarios = self.db_session.exec(select(Usuario)).all()
+        return usuarios
 
     def add_update_usuario(self, usuario: Usuario) -> Usuario:
         self.db_session.add(usuario)
