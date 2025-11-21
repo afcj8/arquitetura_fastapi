@@ -21,7 +21,7 @@ class UsuarioService:
         if usuario_por_email:
             raise ValueError("Email já existe.")
         
-    def criar_usuario(self, usuario: Usuario) -> Usuario:
+    def add_usuario(self, usuario: Usuario) -> Usuario:
         self.validar_username_senha(usuario)
         self.checar_usuario_existente(usuario.username, usuario.email)
         novo_usuario = self.usuario_repository.add_usuario(usuario)
