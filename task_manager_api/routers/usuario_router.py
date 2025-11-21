@@ -19,6 +19,17 @@ from task_manager_api.serializers.usuario_serializer import (
 
 router = APIRouter()
 
+@router.get(
+    "",
+    response_model=list[UsuarioResponse]
+)
+def listar_usuarios(
+    service: UsuarioService = Depends(get_usuario_service),
+    usuario_logado: Usuario = Depends(get_usuario_autenticado)
+):    
+    usuarios = service.get_usuarios(usuario_logado)
+    return usuarios
+
 @router.post("")
 def criar_usuario(
     usuario_data: UsuarioRequest,
@@ -36,6 +47,22 @@ def obter_usuario_atual(
     usuario: Usuario = Depends(get_usuario_autenticado)
 ):
     return usuario
+
+@router.post(
+    "/admin",
+    response_model=UsuarioResponse
+)
+def criar_usuario_admin(
+    usuario_data: UsuarioRequest,
+    service: UsuarioService = Depends(get_usuario_service),
+    usuario_logado: Usuario = Depends(get_usuario_autenticado)
+):
+    service.checar_usuario_is_admin(usuario_logado)
+
+    usuario = Usuario.model_validate(usuario_data)
+    usuario.is_admin = True
+    novo_usuario = service.add_admin(usuario)
+    return novo_usuario
 
 @router.patch("/{id}")
 def atualizar_usuario(

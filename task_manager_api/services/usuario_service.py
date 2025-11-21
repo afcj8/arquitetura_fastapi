@@ -77,6 +77,14 @@ class UsuarioService:
         novo_usuario =  self.usuario_repository.add_update_usuario(usuario)
         return novo_usuario
     
+    def get_usuarios(
+        self,
+        usuario: Usuario
+    ) -> list[Usuario]:
+        self.checar_usuario_is_admin(usuario)
+        usuarios = self.usuario_repository.get_usuarios()
+        return usuarios
+    
     def update_usuario(
         self,
         usuario_id: int,
