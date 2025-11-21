@@ -3,6 +3,7 @@ from task_manager_api.database import get_session
 from sqlmodel import Session
 
 from task_manager_api.models.usuario import Usuario
+from task_manager_api.dependencies import get_usuario_autenticado
 from task_manager_api.repositories.usuario_repository import UsuarioRepository
 from task_manager_api.services.usuario_service import UsuarioService
 from task_manager_api.serializers.usuario_serializer import UsuarioRequest
@@ -19,3 +20,9 @@ def criar_usuario(
     usuario = Usuario.model_validate(usuario_data)
     novo_usuario = service.add_usuario(usuario)
     return {"detail": "Usuário criado com sucesso.", "usuario_id": novo_usuario.id}
+
+@router.get("/me")
+def obter_usuario_atual(
+    usuario: Usuario = Depends(get_usuario_autenticado)
+):
+    return usuario
