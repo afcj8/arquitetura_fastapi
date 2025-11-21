@@ -12,8 +12,15 @@ from task_manager_api.models.usuario import Usuario
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-def get_usuario_service(session=Depends(get_session)):
-    return UsuarioService(UsuarioRepository(session))
+def get_usuario_repository(
+    session: Session = Depends(get_session)
+):
+    return UsuarioRepository(session)
+
+def get_usuario_service(
+    session=Depends(get_usuario_repository)
+):
+    return UsuarioService(session)
 
 def get_auth_service(usuario_service=Depends(get_usuario_service)):
     return AuthService(usuario_service)
