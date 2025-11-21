@@ -21,3 +21,11 @@ class TarefaResponse(BaseModel):
     prioridade: str
     usuario_id: int
     data_criacao: datetime
+
+class TarefaPatchRequest(BaseModel):
+    """Representa o modelo de atualização parcial da tarefa"""
+    
+    titulo: Optional[str] = None
+    descricao: Optional[str] = None
+    status: Optional[str] = None
+    prioridade: Optional[str] = None

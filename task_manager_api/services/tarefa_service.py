@@ -1,4 +1,5 @@
 from task_manager_api.repositories.tarefa_repository import TarefaRepository
+from task_manager_api.serializers.tarefa_serializer import TarefaPatchRequest
 from task_manager_api.models.tarefa import Tarefa
 from fastapi.exceptions import HTTPException
 from fastapi import status
@@ -41,7 +42,7 @@ class TarefaService:
     def update_tarefa(
         self, 
         tarefa_id: int,
-        dados: Tarefa,
+        dados: TarefaPatchRequest,
         usuario_id: int
     ) -> Tarefa:
         tarefa_existente = self.tarefa_repository.get_tarefa_por_id(tarefa_id)
@@ -51,8 +52,17 @@ class TarefaService:
         if tarefa_existente.usuario_id != usuario_id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Você não tem permissão para atualizar esta tarefa")
         
-        for chave, valor in dados.dict(exclude_unset=True).items():
-            setattr(tarefa_existente, chave, valor)
+        if dados.titulo is not None:
+            tarefa_existente.titulo = dados.titulo
+
+        if dados.descricao is not None:
+            tarefa_existente.descricao = dados.descricao
+
+        if dados.status is not None:
+            tarefa_existente.status = dados.status
+
+        if dados.prioridade is not None:
+            tarefa_existente.prioridade = dados.prioridade
         
         tarefa_atualizada = self.tarefa_repository.add_update_tarefa(tarefa_existente)
         return tarefa_atualizada

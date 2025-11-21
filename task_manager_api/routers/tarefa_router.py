@@ -1,15 +1,15 @@
-from typing import Optional
 from sqlmodel import Session
 from fastapi import APIRouter, Depends
 from task_manager_api.database import get_session
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter
 from task_manager_api.models.tarefa import Tarefa
 from task_manager_api.dependencies import get_usuario_autenticado
 from task_manager_api.repositories.tarefa_repository import TarefaRepository
 from task_manager_api.services.tarefa_service import TarefaService
 from task_manager_api.serializers.tarefa_serializer import (
     TarefaRequest, 
-    TarefaResponse
+    TarefaResponse,
+    TarefaPatchRequest
 )
 
 router = APIRouter()
@@ -58,6 +58,21 @@ def obter_tarefa(
     repo = TarefaRepository(session)
     service = TarefaService(repo)
     tarefa = service.get_tarefa_por_id(id, usuario.id)
+    return tarefa
+
+@router.patch(
+    "/{id}",
+    response_model=TarefaResponse
+)
+def atualizar_tarefa(
+    id: int,
+    tarefa_data: TarefaPatchRequest,
+    usuario: int = Depends(get_usuario_autenticado),
+    session: Session = Depends(get_session)
+):
+    repo = TarefaRepository(session)
+    service = TarefaService(repo)
+    tarefa = service.update_tarefa(id, tarefa_data, usuario.id)
     return tarefa
 
 @router.delete(
