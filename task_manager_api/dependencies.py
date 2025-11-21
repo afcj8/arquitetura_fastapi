@@ -7,7 +7,7 @@ from task_manager_api.services.usuario_service import UsuarioService
 from task_manager_api.services.auth_service import AuthService
 from task_manager_api.models.usuario import Usuario
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 def get_usuario_service(session=Depends(get_session)):
     return UsuarioService(UsuarioRepository(session))

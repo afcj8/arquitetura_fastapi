@@ -10,8 +10,8 @@ from task_manager_api.services.token_service import criar_access_token, criar_re
 
 router = APIRouter()
 
-@router.post("/login")
-def login(
+@router.post("/token")
+def token(
     form: OAuth2PasswordRequestForm = Depends(),
     session: Session = Depends(get_session)
 ) -> TokenResponse:
