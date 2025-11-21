@@ -9,6 +9,7 @@ from task_manager_api.services.auth_service import AuthService
 from task_manager_api.serializers.token_serializer import TokenResponse, RefreshToken
 from task_manager_api.services.token_service import criar_access_token, criar_refresh_token
 from task_manager_api.config import ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_MINUTES
+from task_manager_api.dependencies import get_auth_service
 
 router = APIRouter()
 
@@ -18,13 +19,8 @@ router = APIRouter()
 )
 def token(
     form: OAuth2PasswordRequestForm = Depends(),
-    session: Session = Depends(get_session)
+    auth_service: AuthService = Depends(get_auth_service)
 ):
-
-    repo = UsuarioRepository(session)
-    usuario_service = UsuarioService(repo)
-    auth_service = AuthService(usuario_service)
-
     usuario = auth_service.autenticar_usuario(form.username, form.password)
 
     payload = {"sub": usuario.username}
@@ -45,12 +41,8 @@ def token(
 )
 def refresh_token(
     refresh_token_data: RefreshToken,
-    session: Session = Depends(get_session)
+    auth_service: AuthService = Depends(get_auth_service)
 ):
-    repo = UsuarioRepository(session)
-    usuario_service = UsuarioService(repo)
-    auth_service = AuthService(usuario_service)
-
     usuario = auth_service.refresh_token(refresh_token_data.refresh_token)
 
     access_token = criar_access_token(
