@@ -1,6 +1,5 @@
 from jose import JWTError, jwt
 from fastapi import HTTPException, status
-
 from task_manager_api.config import SECRET_KEY, ALGORITHM
 from task_manager_api.security import verificar_senha
 from task_manager_api.services.usuario_service import UsuarioService
@@ -29,5 +28,22 @@ class AuthService:
     def decodificar_token(self, token: str):
         try:
             return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        except JWTError:
+            raise CREDENCIAIS_INVALIDAS
+        
+    def validar_token(self, token: str):
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            username = payload.get("sub")
+
+            if not username:
+                raise CREDENCIAIS_INVALIDAS
+
+            usuario = self.usuario_service.usuario_repository.get_usuario_por_username(username)
+            if not usuario:
+                raise CREDENCIAIS_INVALIDAS
+
+            return usuario
+
         except JWTError:
             raise CREDENCIAIS_INVALIDAS
