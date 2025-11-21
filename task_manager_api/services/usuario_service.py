@@ -45,6 +45,32 @@ class UsuarioService:
         if usuario_por_email:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email já cadastrado")
         
+    def checar_usuario_is_admin(
+        self,
+        usuario: Usuario
+    ) -> None:
+        if not usuario.is_admin:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Ação permitida apenas para administradores."
+            )
+        
+    def get_usuarios(
+        self,
+        usuario: Usuario
+    ) -> list[Usuario]:
+        self.checar_usuario_is_admin(usuario)
+        usuarios = self.usuario_repository.get_usuarios()
+        return usuarios
+    
+    def get_admins(
+        self,
+        usuario: Usuario
+    ) -> list[Usuario]:
+        self.checar_usuario_is_admin(usuario)
+        admins = self.usuario_repository.get_admins()
+        return admins
+        
     def add_usuario(
         self, 
         usuario: Usuario
@@ -53,6 +79,18 @@ class UsuarioService:
         self.checar_usuario_existente(usuario.username, usuario.email)
         usuario.senha = criar_hash_senha(usuario.senha)
         novo_usuario = self.usuario_repository.add_update_usuario(usuario)
+        return novo_usuario
+    
+    def add_admin(
+        self,
+        usuario: Usuario
+    ) -> Usuario:
+        self.validar_username_senha(usuario)
+        self.checar_usuario_existente(usuario.username, usuario.email)
+        self.checar_usuario_is_admin(usuario)
+        usuario.senha = criar_hash_senha(usuario.senha)
+        usuario.is_admin = True
+        novo_usuario =  self.usuario_repository.add_update_usuario(usuario)
         return novo_usuario
     
     def update_usuario(
