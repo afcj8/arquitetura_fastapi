@@ -42,6 +42,20 @@ def criar_tarefa(
         **tarefa_data.model_dump(),
         usuario_id=usuario.id
     )
-    
+
     nova_tarefa = service.add_tarefa(tarefa)
     return nova_tarefa
+
+@router.get(
+    "/{id}",
+    response_model=TarefaResponse
+)
+def obter_tarefa(
+    id: int,
+    usuario: int = Depends(get_usuario_autenticado),
+    session: Session = Depends(get_session)
+):
+    repo = TarefaRepository(session)
+    service = TarefaService(repo)
+    tarefa = service.get_tarefa_por_id(id, usuario.id)
+    return tarefa
