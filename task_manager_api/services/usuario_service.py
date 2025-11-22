@@ -72,6 +72,21 @@ class UsuarioService:
         admins = self.usuario_repository.get_admins()
         return admins
     
+    def get_usuario_por_id(
+        self,
+        usuario_id: int,
+        usuario_logado: Usuario
+    ) -> Usuario:
+        usuario = self.usuario_repository.get_usuario_por_id(usuario_id)
+        if not usuario:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Usuário não encontrado"
+            )
+        if usuario.id != usuario_logado.id:
+            self.checar_usuario_is_admin(usuario_logado)
+        return usuario
+    
     def get_tarefas_por_usuario_id(
         self,
         usuario_id: int,

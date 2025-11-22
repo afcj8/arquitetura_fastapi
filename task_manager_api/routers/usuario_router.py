@@ -50,6 +50,18 @@ def obter_usuario_atual(
     return usuario
 
 @router.get(
+    "/{id}",
+    response_model=UsuarioAdminResponse
+)
+def obter_usuario_por_id(
+    id: int,
+    service: UsuarioService = Depends(get_usuario_service),
+    usuario_logado: Usuario = Depends(get_usuario_autenticado)
+):
+    usuario = service.get_usuario_por_id(id, usuario_logado)
+    return usuario
+
+@router.get(
     "/admins",
     response_model=list[UsuarioAdminResponse]
 )
@@ -61,7 +73,7 @@ def listar_usuarios_admins(
     return admins
 
 @router.post(
-    "/admin",
+    "/admins",
     response_model=UsuarioAdminResponse
 )
 def criar_usuario_admin(
