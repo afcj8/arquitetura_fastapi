@@ -12,7 +12,8 @@ from task_manager_api.dependencies import (
 )
 from task_manager_api.serializers.usuario_serializer import (
     UsuarioRequest, 
-    UsuarioResponse, 
+    UsuarioResponse,
+    UsuarioAdminResponse,
     UsuarioPatchRequest, 
     UsuarioSenhaPatchRequest
 )
@@ -21,7 +22,7 @@ router = APIRouter()
 
 @router.get(
     "",
-    response_model=list[UsuarioResponse]
+    response_model=list[UsuarioAdminResponse]
 )
 def listar_usuarios(
     service: UsuarioService = Depends(get_usuario_service),
@@ -50,7 +51,7 @@ def obter_usuario_atual(
 
 @router.get(
     "/admins",
-    response_model=list[UsuarioResponse]
+    response_model=list[UsuarioAdminResponse]
 )
 def listar_usuarios_admins(
     service: UsuarioService = Depends(get_usuario_service),
@@ -61,7 +62,7 @@ def listar_usuarios_admins(
 
 @router.post(
     "/admin",
-    response_model=UsuarioResponse
+    response_model=UsuarioAdminResponse
 )
 def criar_usuario_admin(
     usuario_data: UsuarioRequest,

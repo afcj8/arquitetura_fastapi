@@ -1,6 +1,8 @@
 """Conexão com o banco de dados"""
 
-from sqlmodel import Session, SQLModel , create_engine
+from sqlmodel import Session, SQLModel, create_engine, select
+from task_manager_api.security import criar_hash_senha
+from task_manager_api.models.usuario import Usuario
 from fastapi import Depends
 
 sqlite_file_name = "database.db"
@@ -19,3 +21,18 @@ def get_session():
         yield session
         
 SessionDep = Depends(get_session)
+
+def create_usuario_admin():
+    """Cria um usuário admin padrão, se não existir."""
+    with Session(engine) as session:
+        usuario_admin = session.exec(select(Usuario).where(Usuario.is_admin == True)).first()
+        if not usuario_admin:
+            admin = Usuario(
+                username="admin",
+                senha=criar_hash_senha("admin123"),
+                nome="Administrador",
+                email="admin@example.com",
+                is_admin=True,
+            )
+            session.add(admin)
+            session.commit()
