@@ -20,6 +20,17 @@ class UsuarioResponse(BaseModel):
     email: str
     data_criacao: datetime
 
+
+class UsuarioAdminResponse(BaseModel):
+    """Representa o modelo de resposta do usuário admin"""
+    
+    id: int
+    username: str
+    nome: str
+    email: str
+    is_admin: bool
+    data_criacao: datetime
+
 class UsuarioPatchRequest(BaseModel):
     """Representa o modelo de atualização parcial do usuário"""
     
