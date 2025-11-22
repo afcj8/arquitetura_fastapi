@@ -18,7 +18,7 @@ router = APIRouter()
 @router.get("",
     response_model=list[TarefaResponse]
 )
-def listar_tarefas(
+def listar_tarefas_usuario_autenticado(
     usuario: int = Depends(get_usuario_autenticado),
     service: TarefaService = Depends(get_tarefa_service)
 ):
