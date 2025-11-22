@@ -3,21 +3,6 @@
 > API de exemplo: **Sistema de Gerenciamento de Tarefas**  
 > Demonstra boas práticas de arquitetura para FastAPI: separação por camadas, SRP, padrão DAO, Service Layer e Injeção de Dependências.
 
----
-
-## Sumário
-
-- Visão geral
-- Estrutura de diretórios
-- Principais conceitos arquiteturais
-- Modelos (entidades)
-- Endpoints (rotas) — resumo e exemplos
-- Fluxo de requisição (ex.: router → service → repository)
-- Autenticação e segurança
-- Observações de comportamento (reset de senha, remoção em cascata)
-- Vantagens / Desvantagens da arquitetura
-- Manual do desenvolvedor (instalação, execução)
-
 ## Visão geral
 
 `task_manager_api` é uma API construída com **FastAPI**, **SQLAlchemy** e **SQLite**, que exemplifica como estruturar uma aplicação em camadas para torná-la testável, escalável e fácil de manter. A API permite o gerenciamento de **usuários** e **tarefas**, com controle de acesso via **JWT**.
@@ -46,7 +31,7 @@ task_manager_api/
 │ ├── serializers/
 │ │ ├── tarefa_serializer.py
 │ │ ├── token_serializer.py
-│ │ └── usuario_serailizer.py
+│ │ └── usuario_serializer.py
 │ ├── services/
 │ │ ├── auth_service.py
 │ │ ├── reset_senha_service.py
@@ -97,7 +82,7 @@ Resposta: `serializer (response) ← router ← service ← repository ← model
 | Atributo       | Tipo       | Observações                             |
 |----------------|------------|-----------------------------------------|
 | `id`           | int        | PK                                      |
-| `usuario_id`   | int        | FK → users.id                           |
+| `usuario_id`   | int        | FK → usuario.id                           |
 | `titulo`       | str        | obrigatório                             |
 | `descricao`    | str        | opcional                                |
 | `status`       | enum       | pendente/em_progresso/concluida         |
@@ -114,13 +99,13 @@ Resposta: `serializer (response) ← router ← service ← repository ← model
 
 Troca `username` + `senha` por **access token** + **refresh token**.
 
-Request:
+Exemplo (request):
 
 ```json
 { "username": "admin", "password": "admin123" }
 ```
 
-Response:
+Exemplo (response):
 
 ```
 { "access_token": "...", "refresh_token": "...", "token_type": "bearer" }
@@ -140,27 +125,239 @@ Recebe refresh token e retorna um novo access token.
 | GET    | `/usuarios/{id}`        | admin                    | Detalha os dados de um usuário específico. |
 | GET    | `/usuarios/admins`      | admin                    | Retorna todos os usuários que são admins. |
 | POST   | `/usuarios/admins`      | admin                    | Cria um usuário admin. |
-| PATCH  | `/usuarios/{id}`        | apenas o próprio usuário | Atualiza um usuário. |
+| PATCH  | `/usuarios/{id}`        | autenticado              | Atualiza um usuário (apenas ele próprio). |
 | DELETE | `/usuarios/{id}`        | admin                    | Deleta as tarefas em cascade. |
 | POST   | `/usuarios/reset-senha` | pública                  | Gera um token de redefinição de senha (simulado via arquivo `email.log`). |
 | PATCH  | `/usuarios/{username}/senha` | — (com token válido)  | Redefine a senha utilizando o token gerado. |
 
-## 🛡️ Tarefas (`/tarefas`)
+## 📝 Tarefas (`/tarefas`)
 
 | Método | Rota                     | Permissão Necessária                     |
 | ------ | ------------------------ | ---------------------------------------- |
 | GET    | `/tarefas`               | autenticado — lista do usuário           |
 | POST   | `/tarefas`               | autenticado — cria tarefa para o usuário |
-| GET    | `/tarefas/{id}`          | autenticado — do usuário                 |
-| PATCH  | `/tarefas/{id}`          | autenticado — do usuário                 |
-| DELETE | `/tarefas/{id}`          | autenticado — do usuário                 |
+| GET    | `/tarefas/{id}`          | autenticado (próprias tarefas)           |
+| PATCH  | `/tarefas/{id}`          | autenticado (próprias tarefas)           |
+| DELETE | `/tarefas/{id}`          | autenticado (próprias tarefas)           |
 | GET    | `/tarefas/usuarios/{id}` | admin — tarefas por usuário              |
 
 ## 📌 Observações
 
 - O reset de senha envia o token para o arquivo `email.log`, simulando o envio por e-mail.
-- Um usuário só consegue realizar o CRUD com as suas tarefas.
-- Após deletar um usuário, todas as suas tarefas são deletadas também.
+- Cada usuário só pode manipular suas próprias tarefas.
+- Ao deletar um usuário, suas tarefas são removidas automaticamente (cascade).
+
+## 👨🏻‍💻 Exemplo de uso da Arquitetura proposta
+
+O exemplo a seguir demonstra o fluxo completo para **adicionar** e **deletar** uma tarefa pertencente a um usuário.
+A operação envolve três camadas princípais da arquitetura: **repositório**, **serviço** e **rotas**.
+
+## 📚 Repositório (`TarefaRepository`)
+
+O repositório é responsável exclusivamente pelo acesso ao banco de dados e pelas operações CRUD da entidade `Tarefa`:
+
+```
+from task_manager_api.models.tarefa import Tarefa
+from sqlmodel import Session
+
+class TarefaRepository:    
+    def __init__(self, db_session: Session):
+        self.db_session = db_session
+
+    def get_tarefa_por_id(self, tarefa_id: int) -> Tarefa | None:
+        tarefa = self.db_session.get(Tarefa, tarefa_id)
+        return tarefa
+
+    def add_update_tarefa(self, tarefa: Tarefa) -> Tarefa:
+        self.db_session.add(tarefa)
+        self.db_session.commit()
+        self.db_session.refresh(tarefa)
+        return tarefa
+    
+    def delete_tarefa(self, tarefa: Tarefa) -> None:
+        self.db_session.delete(tarefa)
+        self.db_session.commit()
+```
+
+## 🧠 Serviços (`TarefaService`)
+
+A camada de serviços implementa a lógica de negócios: validação, regras, permissões e coordenação entre camadas.
+
+```
+from task_manager_api.repositories.tarefa_repository import TarefaRepository
+from task_manager_api.models.tarefa import Tarefa
+from fastapi.exceptions import HTTPException
+from fastapi import status
+
+class TarefaService:
+    def __init__(
+        self, 
+        tarefa_repository: TarefaRepository
+    ):
+        self.tarefa_repository = tarefa_repository
+    
+    def add_tarefa(
+        self, 
+        tarefa: Tarefa
+    ) -> Tarefa:
+        nova_tarefa = self.tarefa_repository.add_update_tarefa(tarefa)
+        return nova_tarefa
+    
+    def delete_tarefa(
+        self, 
+        tarefa_id: int,
+        usuario_id: int
+    ) -> None:
+        tarefa_existente = self.tarefa_repository.get_tarefa_por_id(tarefa_id)
+        if not tarefa_existente:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tarefa não encontrada")
+        
+        if tarefa_existente.usuario_id != usuario_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Você não tem permissão para deletar esta tarefa")
+        
+        self.tarefa_repository.delete_tarefa(tarefa_existente)
+```
+
+## 🌐 Rotas (Routers)
+
+As rotas recebem a requisição, validam dados via serializers e delegam a execução para a camada de serviços.
+
+```
+from fastapi import APIRouter, Depends
+from task_manager_api.models.tarefa import Tarefa
+from task_manager_api.dependencies import (
+    get_usuario_autenticado,
+    get_tarefa_service
+)
+from task_manager_api.services.tarefa_service import TarefaService
+from task_manager_api.serializers.tarefa_serializer import (
+    TarefaRequest, 
+    TarefaResponse
+)
+
+router = APIRouter()
+
+@router.post("",
+    response_model=TarefaResponse,
+    status_code=201
+)
+def criar_tarefa(
+    tarefa_data: TarefaRequest,
+    usuario: int = Depends(get_usuario_autenticado),
+    service: TarefaService = Depends(get_tarefa_service)
+):
+    tarefa = Tarefa(
+        **tarefa_data.model_dump(),
+        usuario_id=usuario.id
+    )
+
+    nova_tarefa = service.add_tarefa(tarefa)
+    return nova_tarefa
+
+@router.delete(
+    "/{id}",
+    status_code=200
+)
+def deletar_tarefa(
+    id: int,
+    usuario: int = Depends(get_usuario_autenticado),
+    service: TarefaService = Depends(get_tarefa_service)
+):
+    service.delete_tarefa(id, usuario.id)
+    return {"detail": "Tarefa deletada com sucesso."}
+```
+
+## 🔁 Serializer
+
+A camada de serializer é responsável por definir como os dados devem ser enviados e recebidos pela API.
+Ela garante que o formato das informações esteja correto tanto ao criar uma tarefa quanto ao retornar uma resposta.
+
+```
+from typing import Optional
+from datetime import datetime
+from pydantic import BaseModel
+
+class TarefaRequest(BaseModel):
+    """Representa o modelo de criação da tarefa"""
+    
+    titulo: str
+    descricao: Optional[str] = None
+    status: str
+    prioridade: str
+    data_criacao: Optional[datetime] = datetime.now()
+
+class TarefaResponse(BaseModel):
+    """Representa o modelo de resposta da tarefa"""
+    
+    id: int
+    titulo: str
+    descricao: Optional[str] = None
+    status: str
+    prioridade: str
+    usuario_id: int
+    data_criacao: datetime
+```
+
+
+## 🔗 Injeção de Dependências
+
+As dependências são responsáveis por construir e entregar instâncias de repositórios, serviços e autenticação para as rotas, mantendo baixo acoplamento entre as camadas.
+
+```
+from fastapi import Depends
+from sqlmodel import Session
+from fastapi.security import OAuth2PasswordBearer
+from task_manager_api.database import get_session
+from task_manager_api.repositories.usuario_repository import UsuarioRepository
+from task_manager_api.repositories.tarefa_repository import TarefaRepository
+from task_manager_api.services.usuario_service import UsuarioService
+from task_manager_api.services.tarefa_service import TarefaService
+from task_manager_api.services.auth_service import AuthService
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+def get_usuario_repository(
+    session: Session = Depends(get_session)
+):
+    return UsuarioRepository(session)
+
+def get_usuario_service(
+    session=Depends(get_usuario_repository)
+):
+    return UsuarioService(session)
+
+def get_auth_service(usuario_service=Depends(get_usuario_service)):
+    return AuthService(usuario_service)
+
+def get_tarefa_repository(
+    session: Session = Depends(get_session)
+):
+    return TarefaRepository(session)
+
+def get_tarefa_service(
+    repo: TarefaRepository = Depends(get_tarefa_repository)
+):
+    return TarefaService(repo)
+
+def get_usuario_autenticado(
+    token: str = Depends(oauth2_scheme),
+    auth_service: AuthService = Depends(get_auth_service)
+):
+    return auth_service.validar_token(token)
+```
+
+Ao aplicar o Princípio da Responsabilidade Única (SRP) em uma aplicação FastAPI, código não se torna apenas mais limpo e fácil de manter, mas também estabelece uma base sólida para a expansão futura da aplicação.
+
+## DAO
+
+- **Encapsulamento de Acesso a Dados:** O DAO fornece uma camada dedicada para gerenciar todas as operações de acesso a dados. Isso significa que qualquer alteração na lógica de persistência (por exemplo, a mudança de SQL para NoSQL) é realizada apenas na camada do DAO, sem afetar o restante da aplicação.
+- **Reutilização:** A implementação do DAO pode ser reutilizada por diferentes serviços ou componentes que precisam interagir com dados da mesma entidade, eliminando a duplicação de código.
+- **Testes simplificados:** Ao separar o acesso aos dados em sua própria camada, fica fácil criar mocks ou stubs para testes unitários, permitindo que a lógica de negócios seja testada isoladamente, sem depender do banco de dados real.
+- **Facilidade de manutenção:** As operações de acesso a dados são centralizadas em uma classe DAO, facilitando a localização e correção de erros relacionados à persistência.
+
+## Camada de Serviços
+
+Ao separar a lógica de negócios em uma camada de serviços, obtém-se um código mais modular, mais fácil de manter e testar. Além disso, facilita a reutilização da lógica de negócios em diferentes contextos de aplicação.
 
 ## ⚖️ Vantagens e Desvantagens
 
