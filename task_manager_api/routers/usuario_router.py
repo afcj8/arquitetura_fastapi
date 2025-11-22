@@ -87,6 +87,15 @@ def atualizar_usuario(
     
     return {"detail": "Usuário atualizado com sucesso.", "usuario_id": usuario.id}
 
+@router.delete("/{id}")
+def deletar_usuario(
+    id: int,
+    service: UsuarioService = Depends(get_usuario_service),
+    usuario_logado: Usuario = Depends(get_usuario_autenticado)
+):
+    service.delete_usuario(id, usuario_logado)
+    return {"detail": "Usuário deletado com sucesso."}
+
 @router.post("/reset-senha")
 def solicitar_reset_senha(
     email: str = Body(embed=True),

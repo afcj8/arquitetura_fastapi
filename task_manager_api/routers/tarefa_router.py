@@ -1,7 +1,12 @@
 from fastapi import APIRouter, Depends
 from task_manager_api.models.tarefa import Tarefa
-from task_manager_api.dependencies import get_usuario_autenticado, get_tarefa_service
+from task_manager_api.dependencies import (
+    get_usuario_autenticado, 
+    get_usuario_service,
+    get_tarefa_service
+)
 from task_manager_api.services.tarefa_service import TarefaService
+from task_manager_api.services.usuario_service import UsuarioService
 from task_manager_api.serializers.tarefa_serializer import (
     TarefaRequest, 
     TarefaResponse,
@@ -72,3 +77,15 @@ def deletar_tarefa(
 ):
     service.delete_tarefa(id, usuario.id)
     return {"detail": "Tarefa deletada com sucesso."}
+
+@router.get(
+    "/usuarios/{id}",
+    response_model=list[TarefaResponse]
+)
+def listar_tarefas_por_usuario_id(
+    id: int,
+    usuario: int = Depends(get_usuario_autenticado),
+    service: UsuarioService = Depends(get_usuario_service)
+):
+    tarefas = service.get_tarefas_por_usuario_id(id, usuario)
+    return tarefas

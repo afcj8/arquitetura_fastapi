@@ -1,5 +1,6 @@
 from task_manager_api.serializers.usuario_serializer import UsuarioPatchRequest, UsuarioSenhaPatchRequest
 from task_manager_api.repositories.usuario_repository import UsuarioRepository
+from task_manager_api.repositories.tarefa_repository import TarefaRepository
 from task_manager_api.models.usuario import Usuario
 from task_manager_api.security import criar_hash_senha
 from fastapi.exceptions import HTTPException
@@ -70,6 +71,22 @@ class UsuarioService:
         self.checar_usuario_is_admin(usuario)
         admins = self.usuario_repository.get_admins()
         return admins
+    
+    def get_tarefas_por_usuario_id(
+        self,
+        usuario_id: int,
+        usuario_logado: Usuario
+    ) -> list[Usuario]:
+        usuario = self.usuario_repository.get_usuario_por_id(usuario_id)
+        if not usuario:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Usuário não encontrado"
+            )
+        self.checar_usuario_is_admin(usuario_logado)
+        tarefa_repository = TarefaRepository(self.usuario_repository.db_session)
+        tarefas = tarefa_repository.get_tarefas_por_usuario_id(usuario_id)
+        return tarefas
         
     def add_usuario(
         self, 
@@ -142,3 +159,19 @@ class UsuarioService:
         usuario.senha = criar_hash_senha(dados.senha)
         
         return self.usuario_repository.add_update_usuario(usuario)
+    
+    def delete_usuario(
+        self,
+        usuario_id: int,
+        usuario_logado: Usuario
+    ) -> None:
+        
+        usuario_existente = self.usuario_repository.get_usuario_por_id(usuario_id)
+        if not usuario_existente:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Usuário não encontrado"
+            )
+
+        self.checar_usuario_is_admin(usuario_logado)
+        self.usuario_repository.delete_usuario(usuario_existente)
