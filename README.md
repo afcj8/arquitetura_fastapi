@@ -122,13 +122,13 @@ Recebe refresh token e retorna um novo access token.
 | GET    | `/usuarios`             | admin                    | Lista todos os usuários. |
 | POST   | `/usuarios`             | pública (registro)       | Cria um novo usuário. |
 | GET    | `/usuarios/me`          | autenticado              | Retorna os dados do usuário autenticado. |
-| GET    | `/usuarios/{id}`        | admin                    | Detalha os dados de um usuário específico. |
+| GET    | `/usuarios/{id}`        | autenticado              | Exibe dados de um usuário. Admin vê qualquer um; usuário comum só a si mesmo. |
 | GET    | `/usuarios/admins`      | admin                    | Retorna todos os usuários que são admins. |
 | POST   | `/usuarios/admins`      | admin                    | Cria um usuário admin. |
 | PATCH  | `/usuarios/{id}`        | autenticado              | Atualiza um usuário (apenas ele próprio). |
 | DELETE | `/usuarios/{id}`        | admin                    | Deleta as tarefas em cascade. |
 | POST   | `/usuarios/reset-senha` | pública                  | Gera um token de redefinição de senha (simulado via arquivo `email.log`). |
-| PATCH  | `/usuarios/{username}/senha` | — (com token válido)  | Redefine a senha utilizando o token gerado. |
+| PATCH  | `/usuarios/{username}/senha` | — (com token válido)| Redefine a senha utilizando o token gerado. |
 
 ## 📝 Tarefas (`/tarefas`)
 
