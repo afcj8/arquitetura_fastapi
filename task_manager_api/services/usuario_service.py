@@ -142,3 +142,19 @@ class UsuarioService:
         usuario.senha = criar_hash_senha(dados.senha)
         
         return self.usuario_repository.add_update_usuario(usuario)
+    
+    def delete_usuario(
+        self,
+        usuario_id: int,
+        usuario_logado: Usuario
+    ) -> None:
+        
+        usuario_existente = self.usuario_repository.get_usuario_por_id(usuario_id)
+        if not usuario_existente:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Usuário não encontrado"
+            )
+
+        self.checar_usuario_is_admin(usuario_logado)
+        self.usuario_repository.delete_usuario(usuario_existente)

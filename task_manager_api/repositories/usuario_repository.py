@@ -1,6 +1,7 @@
 """Repositório para operações relacionadas ao usuário."""
 
 from task_manager_api.models.usuario import Usuario
+from .tarefa_repository import TarefaRepository
 from sqlmodel import Session, select
 
 class UsuarioRepository:    
@@ -54,3 +55,12 @@ class UsuarioRepository:
         self.db_session.commit()
         self.db_session.refresh(usuario)
         return usuario
+    
+    def delete_usuario(self, usuario: Usuario) -> None:
+        tarefa_repository = TarefaRepository(self.db_session)
+        tarefas_usuario = tarefa_repository.get_tarefas_por_usuario_id(usuario.id)
+        for tarefa in tarefas_usuario:
+            tarefa_repository.delete_tarefa(tarefa)
+        
+        self.db_session.delete(usuario)
+        self.db_session.commit()
